@@ -9,8 +9,8 @@ WORKSPACE = (Path(__file__).resolve().parent.parent / "tmp").resolve()
 
 
 @tool
-def docker(mode: str, target: str) -> str:
-    """Execute Python code or a Python file inside Docker.
+def python_executor(mode: str, target: str) -> str:
+    """Execute Python code or a Python file in an isolated container.
 
     Args:
         mode: "file" to execute an existing file, or "code" to execute

@@ -3,7 +3,7 @@ from langchain_ollama import ChatOllama
 from langgraph.checkpoint.memory import MemorySaver
 from rich.console import Console
 from rich.markdown import Markdown
-from tools.docker import docker
+from tools.python_executor import python_executor
 
 console = Console()
 backend = backends.FilesystemBackend("./tmp")
@@ -13,7 +13,7 @@ agent = create_deep_agent(
     checkpointer=MemorySaver(),
     backend=backend,
     tools=[
-        docker,
+        python_executor,
     ]
 )
 
