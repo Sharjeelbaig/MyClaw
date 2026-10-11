@@ -1,0 +1,15 @@
+[project]
+name = "deep-agent-sb"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+authors = [
+    { name = "Sharjeel Baig", email = "dr.sharjeel.6@gmail.com" }
+]
+requires-python = ">=3.12"
+dependencies = [
+    "deepagents>=0.7.23",
+    "rich>=15.0.0",
+]
+
+
