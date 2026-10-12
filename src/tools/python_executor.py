@@ -6,7 +6,7 @@ import subprocess
 
 from langchain.tools import tool
 
-WORKSPACE = (Path(__file__).resolve().parent.parent / "tmp").resolve()
+WORKSPACE = (Path(__file__).resolve().parent.parent.parent / "tmp").resolve()
 
 # Configurable via environment variables
 DOCKER_IMAGE = os.getenv("PYTHON_EXECUTOR_IMAGE", "python:3.12-slim")
@@ -39,14 +39,22 @@ def python_executor(mode: str, target: str, timeout: int | None = None) -> str:
     """Execute Python code or a Python file in an isolated container.
 
     Args:
-        mode: "file" to execute an existing file, or "code" to execute
-              a Python code snippet.
-        target: A workspace-relative file path in file mode, or the
-                actual Python source code in code mode.
+        mode: "file" to execute an existing .py file, or "code" to execute
+              a Python code snippet string.
+        target: In "file" mode: a workspace-relative path like "test.py" or "scripts/test.py".
+                In "code" mode: actual Python source code like "print('hello')".
         timeout: Optional timeout in seconds (default: 120, max: 300).
 
-    Returns the exact stdout, stderr, exit code, and execution status.
-    Always use file mode to run an existing script.
+    Returns the exact stdout, stderr, exit code, and execution status as JSON.
+
+    CRITICAL - MODE SELECTION:
+    - Use mode="file" when target is a FILENAME (e.g., "test.py", "script.py")
+    - Use mode="code" when target is PYTHON SOURCE CODE (e.g., "print(1+1)")
+    
+    Examples:
+    - python_executor(mode="file", target="test.py")  # CORRECT for files
+    - python_executor(mode="code", target="print('hi')")  # CORRECT for code snippets
+    - python_executor(mode="code", target="test.py")  # WRONG - executes string "test.py" as code!
 
     IMPORTANT:
     - Never guess or invent output or errors.
