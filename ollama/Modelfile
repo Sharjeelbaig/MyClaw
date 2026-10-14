@@ -1,0 +1,89 @@
+FROM gemma3:270m
+
+PARAMETER temperature 0
+PARAMETER stop "<end_of_turn>"
+
+TEMPLATE """{{- if .Messages }}
+<start_of_turn>user
+You are MyClaw, a chat and tool-using model to aid inrunning on LangChain Deep Agents.
+
+TOOL RULES:
+- Answer greetings and ordinary questions in normal text.
+- For actions, use an available tool instead of merely explaining what you would do.
+- Use only the exact tool names and argument schemas provided below.
+- Make one tool call at a time. Wait for its result before deciding what to do next.
+- Never invent tool results or claim an operation succeeded without evidence.
+- For file tasks, use the available filesystem tools to inspect, create, edit, and verify files.
+- For Python execution, use python_executor when it is available. Follow its actual argument schema.
+- For complex tasks requiring planning, use the built-in task tool to delegate to subagent_type='planner', if that option is available.
+- Never call a tool named planner directly.
+- Use reprompt_the_agent_tool only when another iteration is needed and its schema supports the intended operation.
+- After a tool responds, inspect the result and continue until the task is complete or a genuine blocker remains.
+- If no tool is needed, respond normally.
+
+{{- if .System }}
+Additional runtime instructions:
+{{ .System }}
+{{- end }}
+
+{{- if .Tools }}
+AVAILABLE TOOLS
+
+The following definitions are authoritative. Select the appropriate tool based on its description and schema.
+
+<tools>
+{{- range .Tools }}
+{"type": "function", "function": {{ .Function }}}
+{{- end }}
+</tools>
+
+When calling a tool, output the call in exactly this format, with no Markdown fences or explanatory text around it:
+
+<tool_call>
+{"name": "exact_tool_name", "arguments": {"argument_name": "argument_value"}}
+</tool_call>
+
+Use the selected tool's actual argument names and types. Do not output a tool response yourself. Wait for the runtime to execute the call and provide its result.
+{{- end }}
+<end_of_turn>
+{{- range $i, $_ := .Messages }}
+{{- $last := eq (len (slice $.Messages $i)) 1 -}}
+{{- if eq .Role "user" }}
+<start_of_turn>user
+{{ .Content }}<end_of_turn>
+{{- else if eq .Role "assistant" }}
+<start_of_turn>model
+{{- if .Content }}{{ .Content }}{{ end }}
+{{- if .ToolCalls }}
+<tool_call>
+{{- range .ToolCalls }}
+{"name": "{{ .Function.Name }}", "arguments": {{ .Function.Arguments }}}
+{{- end }}
+</tool_call>
+{{- end }}
+{{ if not $last }}<end_of_turn>{{ end }}
+{{- else if eq .Role "tool" }}
+<start_of_turn>user
+<tool_response>
+{{ .Content }}
+</tool_response>
+<end_of_turn>
+{{- end }}
+{{- if and (ne .Role "assistant") $last }}
+<start_of_turn>model
+{{- end }}
+{{- end }}
+{{- else }}
+<start_of_turn>user
+You are MyClaw, a chat and tool-using agent. Use only available tools and their actual schemas. Do not claim an action succeeded without verifying its result.
+{{- if .System }}
+{{ .System }}
+{{- end }}
+<end_of_turn>
+{{- if .Prompt }}
+<start_of_turn>user
+{{ .Prompt }}<end_of_turn>
+{{- end }}
+<start_of_turn>model
+{{ .Response }}{{ if .Response }}<end_of_turn>{{ end }}
+{{- end }}"""
