@@ -17,7 +17,7 @@ console = Console()
 
 # The model is swappable: set AGENT_MODEL to any Ollama model/tag, e.g.
 #   AGENT_MODEL=gemma4:e2b-it-qat uv run ./src/main.py
-MODEL_NAME = os.getenv("AGENT_MODEL", "myclaw-lfm:latest")
+MODEL_NAME = os.getenv("AGENT_MODEL", "gemma4:e2b-it-qat")
 WORKSPACE_MOUNT = "/workspace/"
 
 backend = backends.CompositeBackend(
